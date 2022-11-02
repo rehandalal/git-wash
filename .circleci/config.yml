@@ -23,6 +23,11 @@ jobs:
             tar -C /usr/local -xzf go1.19.3.linux-amd64.tar.gz
 
       - run:
+          name: Add Golang to PATH
+          command: |
+            export PATH="$PATH":/usr/local/go/bin
+
+      - run:
           name: Run tests
           command: |
             /usr/local/go/bin/go test ./...
