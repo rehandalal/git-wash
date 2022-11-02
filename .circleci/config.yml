@@ -1,8 +1,45 @@
 version: '2.1'
-orbs:
-  shellcheck: circleci/shellcheck@2.2.4
+jobs:
+  test: &test-defaults
+    docker:
+      - image: alpine/git:latest
+
+    shell: /bin/sh -leo pipefail
+
+    environment:
+      BASH_ENV: /etc/profile
+
+    steps:
+      - checkout
+
+      - run:
+          name: Install Golang
+          command: |
+            wget https://go.dev/dl/go1.19.3.linux-amd64.tar.gz
+            tar -C /usr/local -xzf go1.19.3.linux-amd64.tar.gz
+            echo 'export PATH="$PATH":/usr/local/go/bin' >> "$BASH_ENV"
+
+      - run:
+          name: Run tests
+          command: |
+            go test ./...
+
+  test-2.36.3:
+    <<: *test-defaults
+    docker:
+      - image: alpine/git:2.36.3
+  test-1.0.35:
+    <<: *test-defaults
+    docker:
+      - image: alpine/git:1.0.35
 workflows:
-  my_workflow:
+  test_and_deploy:
     jobs:
-      - shellcheck/check:
-          dir: ./src
+      - test-2.36.3:
+          filters:
+              tags:
+                only: /^v.*/
+      - test-1.0.35:
+          filters:
+              tags:
+                only: /^v.*/

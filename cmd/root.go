@@ -1,0 +1,122 @@
+package cmd
+
+import (
+	"errors"
+	"fmt"
+	"os"
+
+	"github.com/rehandalal/git-wash/helpers"
+	"github.com/rehandalal/git-wash/plumbing"
+	"github.com/rehandalal/git-wash/types"
+	"github.com/spf13/cobra"
+)
+
+const VersionMajor int = 1
+const VersionMinor int = 0
+const VersionRevision int = 0
+
+func getOptions(cmd *cobra.Command) *types.RootOptions {
+	// Returns a struct with the flags/options passed to the CLI
+
+	version, _ := cmd.Flags().GetBool("version")
+	noInput, _ := cmd.Flags().GetBool("no-input")
+	skipPrune, _ := cmd.Flags().GetBool("skip-prune")
+	skipMerged, _ := cmd.Flags().GetBool("skip-merged")
+	skipSquashMerged, _ := cmd.Flags().GetBool("skip-squash-merged")
+
+	return &types.RootOptions{
+		Version:          version,
+		NoInput:          noInput,
+		SkipPrune:        skipPrune,
+		SkipMerged:       skipMerged,
+		SkipSquashMerged: skipSquashMerged,
+	}
+}
+
+func rootCommandRunE(cmd *cobra.Command, args []string) error {
+	// Get the options for the CLI
+	options := getOptions(cmd)
+
+	// Show version info if flag was passed
+	if options.Version {
+		fmt.Printf("%d.%d.%d\n", VersionMajor, VersionMinor, VersionRevision)
+		return nil
+	}
+
+	// Get the root of the current repository
+	cwd, err := helpers.GetCurrentGitRepoRoot()
+	if err != nil {
+		helpers.PrintlnColorized(
+			"Error: Repository does not exist.",
+			"red+b",
+		)
+		return errors.New("repo_does_not_exist")
+	}
+
+	// Make sure the working tree is clean
+	if !helpers.IsGitWorkingTreeClean(cwd) {
+		helpers.PrintlnColorized(
+			"Error: Make sure your working tree is clean before attempting to run this script.",
+			"red+b",
+		)
+		return errors.New("working_tree_is_dirty")
+	}
+
+	// Prune remote branches
+	if !options.SkipPrune {
+		err = plumbing.PruneBranches(cwd, options)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Delete merged branches
+	if !options.SkipMerged {
+		err = plumbing.DeleteMergedBranches(cwd, options)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Delete squash merged branches
+	if !options.SkipSquashMerged {
+		err = plumbing.DeleteSquashMergedBranches(cwd, options)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func RootCommand() *cobra.Command {
+	// Initialize the root command
+	cmd := &cobra.Command{
+		Use:           "git-wash",
+		Short:         "A Git extension to clean up your repo",
+		Long:          "A Git extension to clean up your repo",
+		RunE:          rootCommandRunE,
+		SilenceErrors: true,
+		SilenceUsage:  true,
+	}
+
+	// Initialize the flags
+	cmd.Flags().BoolP("help", "h", false, "Show help for git-wash")
+	cmd.Flags().BoolP("version", "v", false, "Show the version for git-wash")
+
+	cmd.Flags().BoolP("no-input", "y", false, "Do not prompt for input")
+
+	cmd.Flags().Bool("skip-prune", false, "Skips pruning of remote branches that are deleted or merged")
+	cmd.Flags().Bool("skip-merged", false, "Skips deletion of branches that have been merged")
+	cmd.Flags().Bool("skip-squash-merged", false, "Skips deletion of branches that have been squash merged")
+
+	return cmd
+}
+
+func Execute() {
+	rootCmd := RootCommand()
+	err := rootCmd.Execute()
+	if err != nil {
+		os.Exit(1)
+	}
+}
