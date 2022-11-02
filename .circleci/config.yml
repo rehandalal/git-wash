@@ -13,16 +13,18 @@ jobs:
       - checkout
 
       - run:
-          name: Install Golang
+          name: Download Golang
           command: |
             wget https://go.dev/dl/go1.19.3.linux-amd64.tar.gz
+      
+      - run:
+          name: Install Golang
             tar -C /usr/local -xzf go1.19.3.linux-amd64.tar.gz
-            export PATH="$PATH":/usr/local/go/bin
 
       - run:
           name: Run tests
           command: |
-            go test ./...
+            /usr/local/go/bin/go test ./...
 
   test-2_36_3:
     <<: *test-defaults
