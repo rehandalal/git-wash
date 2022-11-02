@@ -25,6 +25,11 @@ jobs:
             echo 'export PATH=/usr/local/go/bin:"$PATH"' >> "$BASH_ENV"
 
       - run:
+          name: Install dependencies
+          command: |
+            go install
+
+      - run:
           name: Run tests
           command: |
             go test ./...
