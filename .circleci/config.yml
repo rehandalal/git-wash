@@ -25,12 +25,12 @@ jobs:
       - run:
           name: Add Golang to PATH
           command: |
-            export PATH="$PATH":/usr/local/go/bin
+            echo 'export PATH=/usr/local/go/bin:"$PATH"' >> "$BASH_ENV"
 
       - run:
           name: Run tests
           command: |
-            /usr/local/go/bin/go test ./...
+            go test ./...
 
   test-2_36_3:
     <<: *test-defaults
