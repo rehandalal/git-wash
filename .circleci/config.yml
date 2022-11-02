@@ -21,7 +21,7 @@ jobs:
           name: Install Golang
           command: |
             tar -C /usr/local -xzf go1.19.3.linux-amd64.tar.gz
-            apk add --no-cache libc6-compat
+            apk add --no-cache libc6-compat build-base
             echo 'export PATH=/usr/local/go/bin:"$PATH"' >> "$BASH_ENV"
 
       - run:
