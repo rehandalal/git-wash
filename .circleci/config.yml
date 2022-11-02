@@ -19,6 +19,7 @@ jobs:
       
       - run:
           name: Install Golang
+          command: |
             tar -C /usr/local -xzf go1.19.3.linux-amd64.tar.gz
 
       - run:
