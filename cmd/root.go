@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/rehandalal/git-wash/git"
 	"github.com/rehandalal/git-wash/helpers"
-	"github.com/rehandalal/git-wash/plumbing"
 	"github.com/rehandalal/git-wash/types"
+	"github.com/rehandalal/git-wash/wash"
 	"github.com/spf13/cobra"
 )
 
@@ -43,28 +44,36 @@ func rootCommandRunE(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	// Get the root of the current repository
-	cwd, err := helpers.GetCurrentGitRepoRoot()
+	// Attempt to find the closest git repo
+	cwd, _ := os.Getwd()
+
+	repo, err := git.GetClosestGitRepo(cwd)
 	if err != nil {
-		helpers.PrintlnColorized(
-			"Error: Repository does not exist.",
+		helpers.PrintlnC(
+			"Error: Not a git repository (or any of the parent directories).",
 			"red+b",
 		)
 		return errors.New("repo_does_not_exist")
 	}
 
 	// Make sure the working tree is clean
-	if !helpers.IsGitWorkingTreeClean(cwd) {
-		helpers.PrintlnColorized(
+	if !repo.IsClean() {
+		helpers.PrintlnC(
 			"Error: Make sure your working tree is clean before attempting to run this script.",
 			"red+b",
 		)
 		return errors.New("working_tree_is_dirty")
 	}
 
+	// Create the repo washer
+	rw := wash.RepoWasher{
+		Repo:    repo,
+		Options: options,
+	}
+
 	// Prune remote branches
 	if !options.SkipPrune {
-		err = plumbing.PruneBranches(cwd, options)
+		err = rw.PruneBranches()
 		if err != nil {
 			return err
 		}
@@ -72,7 +81,7 @@ func rootCommandRunE(cmd *cobra.Command, args []string) error {
 
 	// Delete merged branches
 	if !options.SkipMerged {
-		err = plumbing.DeleteMergedBranches(cwd, options)
+		err = rw.DeleteMergedBranches()
 		if err != nil {
 			return err
 		}
@@ -80,7 +89,7 @@ func rootCommandRunE(cmd *cobra.Command, args []string) error {
 
 	// Delete squash merged branches
 	if !options.SkipSquashMerged {
-		err = plumbing.DeleteSquashMergedBranches(cwd, options)
+		err = rw.DeleteSquashMergedBranches()
 		if err != nil {
 			return err
 		}
@@ -114,8 +123,7 @@ func RootCommand() *cobra.Command {
 }
 
 func Execute() {
-	rootCmd := RootCommand()
-	err := rootCmd.Execute()
+	err := RootCommand().Execute()
 	if err != nil {
 		os.Exit(1)
 	}

@@ -1,31 +1,30 @@
-package plumbing
+package wash
 
 import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/rehandalal/git-wash/helpers"
-	"github.com/rehandalal/git-wash/types"
 )
 
-func DeleteMergedBranches(cwd string, options *types.RootOptions) error {
+func (rw RepoWasher) DeleteMergedBranches() error {
 	// Get a list of merged branches
-	out := helpers.ExecGitOutput(cwd, "branch", "--merged")
-	branches := strings.Split(string(out), "\n")
+	out, _ := rw.Repo.Exec("branch", "--merged")
+	branches := out.Lines()
 
 	// Filter the current branch out
 	mergedBranches := []string{}
 	for i := range branches {
 		branch := branches[i]
 		// The current branch will have an asterisk marking it
-		if !strings.HasPrefix(branch, "*") && len(branch) > 0 {
+		if !strings.HasPrefix(branch, "*") {
 			mergedBranches = append(mergedBranches, branch[2:])
 		}
 	}
 
 	// Get the list of branches to delete
 	var deleteBranches []string
-	if options.NoInput {
+	if rw.Options.NoInput {
 		deleteBranches = mergedBranches
 	} else {
 		deleteBranches = []string{}
@@ -36,25 +35,25 @@ func DeleteMergedBranches(cwd string, options *types.RootOptions) error {
 		survey.AskOne(prompt, &deleteBranches)
 	}
 
-	if options.NoInput || (!options.NoInput && len(mergedBranches) == 0) {
-		helpers.PrintlnColorized("> Deleting merged branches...", "white+b")
+	if rw.Options.NoInput || (!rw.Options.NoInput && len(mergedBranches) == 0) {
+		helpers.PrintlnC("> Deleting merged branches...", "white+b")
 	}
 
 	if len(deleteBranches) == 0 {
-		helpers.PrintlnColorized("! No merged branches to delete.", "yellow")
+		helpers.PrintlnC("! No merged branches to delete.", "yellow")
 	} else {
 		// Delete all the branches
 		for i := range deleteBranches {
 			branch := deleteBranches[i]
-			helpers.PrintColorized("> Deleting branch: ", "white+b")
-			helpers.PrintlnColorized(branch, "white")
+			helpers.PrintC("> Deleting branch: ", "white+b")
+			helpers.PrintlnC(branch, "white")
 
-			helpers.ExecGitOutput(cwd, "branch", "-d", branch)
+			rw.Repo.DeleteBranch(branch, false)
 		}
 	}
 
 	if len(deleteBranches) > 0 {
-		helpers.PrintlnColorized("Complete! 🎉", "green+b")
+		helpers.PrintlnC("Complete! 🎉", "green+b")
 	}
 
 	return nil
