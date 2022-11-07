@@ -13,7 +13,7 @@ func (rw RepoWasher) PruneBranches() error {
 		prompt := &survey.Confirm{
 			Message: "Do you want to prune remote branches that are deleted or merged?",
 		}
-		survey.AskOne(prompt, shouldPrune)
+		rw.Survey.AskOne(prompt, &shouldPrune)
 	}
 	if shouldPrune {
 		rw.Repo.Exec("fetch", "--prune")

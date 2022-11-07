@@ -45,7 +45,7 @@ func (rw RepoWasher) DeleteSquashMergedBranches() error {
 			Message: "Which of these squash-merged branches would you like to delete:",
 			Options: squashMergedBranches,
 		}
-		survey.AskOne(prompt, &removeBranches)
+		rw.Survey.AskOne(prompt, &removeBranches)
 	}
 
 	if rw.Options.NoInput || (!rw.Options.NoInput && len(squashMergedBranches) == 0) {

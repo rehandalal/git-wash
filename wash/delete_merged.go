@@ -32,7 +32,7 @@ func (rw RepoWasher) DeleteMergedBranches() error {
 			Message: "Which of these merged branches would you like to delete:",
 			Options: mergedBranches,
 		}
-		survey.AskOne(prompt, &deleteBranches)
+		rw.Survey.AskOne(prompt, &deleteBranches)
 	}
 
 	if rw.Options.NoInput || (!rw.Options.NoInput && len(mergedBranches) == 0) {
