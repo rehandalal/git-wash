@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/rehandalal/git-wash/git"
 	"github.com/rehandalal/git-wash/helpers"
 	"github.com/rehandalal/git-wash/types"
@@ -34,77 +35,80 @@ func getOptions(cmd *cobra.Command) *types.RootOptions {
 	}
 }
 
-func rootCommandRunE(cmd *cobra.Command, args []string) error {
-	// Get the options for the CLI
-	options := getOptions(cmd)
+func getRootCommandRunE(survey wash.Surveyor) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		// Get the options for the CLI
+		options := getOptions(cmd)
 
-	// Show version info if flag was passed
-	if options.Version {
-		fmt.Printf("%d.%d.%d\n", VersionMajor, VersionMinor, VersionRevision)
+		// Show version info if flag was passed
+		if options.Version {
+			fmt.Printf("%d.%d.%d\n", VersionMajor, VersionMinor, VersionRevision)
+			return nil
+		}
+
+		// Attempt to find the closest git repo
+		cwd, _ := os.Getwd()
+
+		repo, err := git.GetClosestGitRepo(cwd)
+		if err != nil {
+			helpers.PrintlnC(
+				"Error: Not a git repository (or any of the parent directories).",
+				"red+b",
+			)
+			return errors.New("repo_does_not_exist")
+		}
+
+		// Make sure the working tree is clean
+		if !repo.IsClean() {
+			helpers.PrintlnC(
+				"Error: Make sure your working tree is clean before attempting to run this script.",
+				"red+b",
+			)
+			return errors.New("working_tree_is_dirty")
+		}
+
+		// Create the repo washer
+		rw := wash.RepoWasher{
+			Repo:    repo,
+			Options: options,
+			Survey:  survey,
+		}
+
+		// Prune remote branches
+		if !options.SkipPrune {
+			err = rw.PruneBranches()
+			if err != nil {
+				return err
+			}
+		}
+
+		// Delete merged branches
+		if !options.SkipMerged {
+			err = rw.DeleteMergedBranches()
+			if err != nil {
+				return err
+			}
+		}
+
+		// Delete squash merged branches
+		if !options.SkipSquashMerged {
+			err = rw.DeleteSquashMergedBranches()
+			if err != nil {
+				return err
+			}
+		}
+
 		return nil
 	}
-
-	// Attempt to find the closest git repo
-	cwd, _ := os.Getwd()
-
-	repo, err := git.GetClosestGitRepo(cwd)
-	if err != nil {
-		helpers.PrintlnC(
-			"Error: Not a git repository (or any of the parent directories).",
-			"red+b",
-		)
-		return errors.New("repo_does_not_exist")
-	}
-
-	// Make sure the working tree is clean
-	if !repo.IsClean() {
-		helpers.PrintlnC(
-			"Error: Make sure your working tree is clean before attempting to run this script.",
-			"red+b",
-		)
-		return errors.New("working_tree_is_dirty")
-	}
-
-	// Create the repo washer
-	rw := wash.RepoWasher{
-		Repo:    repo,
-		Options: options,
-	}
-
-	// Prune remote branches
-	if !options.SkipPrune {
-		err = rw.PruneBranches()
-		if err != nil {
-			return err
-		}
-	}
-
-	// Delete merged branches
-	if !options.SkipMerged {
-		err = rw.DeleteMergedBranches()
-		if err != nil {
-			return err
-		}
-	}
-
-	// Delete squash merged branches
-	if !options.SkipSquashMerged {
-		err = rw.DeleteSquashMergedBranches()
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
-func RootCommand() *cobra.Command {
+func RootCommand(survey wash.Surveyor) *cobra.Command {
 	// Initialize the root command
 	cmd := &cobra.Command{
 		Use:           "git-wash",
 		Short:         "A Git extension to clean up your repo",
 		Long:          "A Git extension to clean up your repo",
-		RunE:          rootCommandRunE,
+		RunE:          getRootCommandRunE(survey),
 		SilenceErrors: true,
 		SilenceUsage:  true,
 	}
@@ -122,8 +126,16 @@ func RootCommand() *cobra.Command {
 	return cmd
 }
 
+type coreSurveyor struct{}
+
+func (cs coreSurveyor) AskOne(p survey.Prompt, response interface{}, opts ...survey.AskOpt) error {
+	return survey.AskOne(p, response, opts...)
+}
+
 func Execute() {
-	err := RootCommand().Execute()
+	cs := coreSurveyor{}
+	rootCmd := RootCommand(cs)
+	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
 	}
