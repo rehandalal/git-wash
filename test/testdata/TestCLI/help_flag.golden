@@ -1,0 +1,12 @@
+A Git extension to clean up your repo
+
+Usage:
+  git-wash [flags]
+
+Flags:
+  -h, --help                 Show help for git-wash
+  -y, --no-input             Do not prompt for input
+      --skip-merged          Skips deletion of branches that have been merged
+      --skip-prune           Skips pruning of remote branches that are deleted or merged
+      --skip-squash-merged   Skips deletion of branches that have been squash merged
+  -v, --version              Show the version for git-wash

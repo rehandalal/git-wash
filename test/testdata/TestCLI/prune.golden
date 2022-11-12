@@ -1,0 +1,6 @@
+[0G[2K[1;92m? [0m[1;99mDo you want to prune remote branches that are deleted or merged? [0m[37m(y/N) [0m[?25l7[999;999f[6n8[?25h[6n[1;32mComplete! 🎉
+[0m[1;37m> Deleting merged branches...
+[0m[33m! No merged branches to delete.
+[0m[1;37m> Deleting squash-merged branches...
+[0m[33m! No squash-merged branches to delete.
+[0m
