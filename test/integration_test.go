@@ -58,7 +58,7 @@ func TestCLI(t *testing.T) {
 		{"no git repo", []string{}, []expect.Batcher{}, 0, []string{}, []string{}},
 		{"working tree is dirty", []string{}, []expect.Batcher{}, dirtyScenario | pruneScenario, []string{"remotes/origin/prune-me"}, []string{}},
 		//{"prune", []string{}, []string{"y"}, pruneScenario, []string{}, []string{"remotes/origin/prune-me"}},
-		{"decline prune", []string{}, []expect.Batcher{&expect.BExp{R: prunePromptRE}, &expect.BSnd{S: "n"}}, pruneScenario, []string{"remotes/origin/prune-me"}, []string{}},
+		{"decline prune", []string{}, []expect.Batcher{&expect.BExp{R: prunePromptRE}, &expect.BSnd{S: "n\n"}}, pruneScenario, []string{"remotes/origin/prune-me"}, []string{}},
 		{"skip prune", []string{"--skip-prune"}, []expect.Batcher{}, pruneScenario, []string{"remotes/origin/prune-me"}, []string{}},
 		{"prune with no input", []string{"--no-input"}, []expect.Batcher{}, pruneScenario, []string{"remotes/origin/prune-me"}, []string{}},
 	}
