@@ -92,13 +92,14 @@ func TestCLI(t *testing.T) {
 				local.Exec("commit", "-m", "'First commit'")
 				local.Exec("push", "origin", "main")
 
+				assert.Equal(t, "", testDir)
+
 				// Set up dirty working tree
 				if (tt.gitScenario & dirtyScenario) != 0 {
 					_, err := os.CreateTemp(testDir, "*")
 					if err != nil {
 						t.Fatal(err)
 					}
-					assert.Equal(t, "", testDir)
 				}
 
 				// Set up the prune scenario
