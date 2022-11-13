@@ -13,6 +13,12 @@ jobs:
       - checkout
 
       - run:
+          name: Configure Git
+          command: |
+            git config --global user.email "foo@bar.com"
+            git config --global user.name "John Doe"
+
+      - run:
           name: Download Golang
           command: |
             wget https://go.dev/dl/go1.19.3.linux-amd64.tar.gz
