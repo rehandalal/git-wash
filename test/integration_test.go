@@ -18,6 +18,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// NOTE: These tests currently only run on Linux due to the way `goexpect` works.
+
 const binaryName string = "git-wash"
 
 const (
@@ -39,6 +41,8 @@ type ExpectInput struct {
 }
 
 func TestCLI(t *testing.T) {
+	prunePromptRE := regexp.MustCompile("Do you want to prune remote branches that are deleted or merged?")
+
 	tests := []struct {
 		name                   string
 		args                   []string
@@ -54,7 +58,7 @@ func TestCLI(t *testing.T) {
 		{"no git repo", []string{}, []ExpectInput{}, 0, []string{}, []string{}},
 		{"working tree is dirty", []string{}, []ExpectInput{}, dirtyScenario | pruneScenario, []string{"remotes/origin/prune-me"}, []string{}},
 		//{"prune", []string{}, []string{"y"}, pruneScenario, []string{}, []string{"remotes/origin/prune-me"}},
-		//{"decline prune", []string{}, []string{"n"}, pruneScenario, []string{"remotes/origin/prune-me"}, []string{}},
+		{"decline prune", []string{}, []ExpectInput{{R: prunePromptRE, S: "n"}}, pruneScenario, []string{"remotes/origin/prune-me"}, []string{}},
 		{"skip prune", []string{"--skip-prune"}, []ExpectInput{}, pruneScenario, []string{"remotes/origin/prune-me"}, []string{}},
 		{"prune with no input", []string{"--no-input"}, []ExpectInput{}, pruneScenario, []string{"remotes/origin/prune-me"}, []string{}},
 	}
