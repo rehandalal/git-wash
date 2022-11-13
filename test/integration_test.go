@@ -157,8 +157,8 @@ func TestCLI(t *testing.T) {
 						break
 					}
 					t.Fatal(err)
-					output = append(output, buffer...)
 				}
+				output = append(output, buffer...)
 			}
 
 			// Update snapshot if required
