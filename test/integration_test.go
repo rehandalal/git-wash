@@ -147,10 +147,7 @@ func TestCLI(t *testing.T) {
 			time.Sleep(100 * time.Millisecond)
 
 			// Configure CLI input
-			for _, i := range tt.input {
-				exp.Expect(i.R, (30 * time.Second))
-				exp.Send(i.S + "\n")
-			}
+			exp.ExpectBatch(tt.input, (30 * time.Second))
 
 			time.Sleep(100 * time.Millisecond)
 
