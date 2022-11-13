@@ -52,7 +52,7 @@ func TestCLI(t *testing.T) {
 		{"version flag", []string{"--version"}, []ExpectInput{}, 0, []string{}, []string{}},
 		{"version flag short", []string{"-v"}, []ExpectInput{}, 0, []string{}, []string{}},
 		{"no git repo", []string{}, []ExpectInput{}, 0, []string{}, []string{}},
-		{"working tree is dirty", []string{}, []ExpectInput{}, dirtyScenario & pruneScenario, []string{"remotes/origin/prune-me"}, []string{}},
+		{"working tree is dirty", []string{}, []ExpectInput{}, dirtyScenario | pruneScenario, []string{"remotes/origin/prune-me"}, []string{}},
 		//{"prune", []string{}, []string{"y"}, pruneScenario, []string{}, []string{"remotes/origin/prune-me"}},
 		//{"decline prune", []string{}, []string{"n"}, pruneScenario, []string{"remotes/origin/prune-me"}, []string{}},
 		{"skip prune", []string{"--skip-prune"}, []ExpectInput{}, pruneScenario, []string{"remotes/origin/prune-me"}, []string{}},
@@ -91,8 +91,6 @@ func TestCLI(t *testing.T) {
 				local.Exec("add", ".")
 				local.Exec("commit", "-m", "'First commit'")
 				local.Exec("push", "origin", "main")
-
-				assert.Equal(t, "", testDir)
 
 				// Set up dirty working tree
 				if (tt.gitScenario & dirtyScenario) != 0 {
