@@ -17,4 +17,7 @@
 # Go workspace file
 go.work
 
+# Codespace
+oryxBuildBinary
+
 git-wash
