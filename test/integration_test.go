@@ -94,8 +94,7 @@ func TestCLI(t *testing.T) {
 
 				// Set up dirty working tree
 				if (tt.gitScenario & dirtyScenario) != 0 {
-					out, err := os.CreateTemp(testDir, "*")
-					println(out)
+					_, err := os.CreateTemp(testDir, "*")
 					if err != nil {
 						t.Fatal(err)
 					}
