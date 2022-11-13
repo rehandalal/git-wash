@@ -141,15 +141,19 @@ func TestCLI(t *testing.T) {
 				t.Fatal(err)
 			}
 
+			time.Sleep(100 * time.Millisecond)
+
 			// Configure CLI input
 			for _, i := range tt.input {
 				exp.Expect(i.R, (30 * time.Second))
 				exp.Send(i.S + "\n")
 			}
 
+			time.Sleep(100 * time.Millisecond)
+
 			// Get CLI output
-			output := []byte{}
-			buffer := make([]byte, 100)
+			output_string := ""
+			buffer := make([]byte, 1)
 			for {
 				_, err := exp.Read(buffer)
 				if err != nil {
@@ -158,8 +162,10 @@ func TestCLI(t *testing.T) {
 					}
 					t.Fatal(err)
 				}
-				output = append(output, buffer...)
+				buffer_string := string(buffer)
+				output_string += buffer_string
 			}
+			output := []byte(output_string)
 
 			// Update snapshot if required
 			if *update {
