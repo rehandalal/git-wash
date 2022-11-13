@@ -98,6 +98,7 @@ func TestCLI(t *testing.T) {
 					if err != nil {
 						t.Fatal(err)
 					}
+					assert.True(t, false)
 				}
 
 				// Set up the prune scenario
